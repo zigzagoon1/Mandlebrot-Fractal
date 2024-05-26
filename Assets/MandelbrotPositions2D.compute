@@ -1,0 +1,60 @@
+#pragma kernel MandelbrotKernel2D
+
+RWStructuredBuffer<float3> _Positions;
+RWStructuredBuffer<float4> _Colors;
+//RWTexture2D<float4> _ColorTexture;
+uint _Resolution;
+float _MinReal;
+float _MaxReal;
+float _MinImaginary;
+float _MaxImaginary;
+
+float2 GetUV(uint2 id) {
+	return (id + 0.5) / _Resolution * 2.0 - 1.0;
+}
+
+void SetPosition(uint2 id, float3 position) {
+	if (id.x < _Resolution && id.y < _Resolution) {
+		_Positions[id.x + id.y * _Resolution] = position;
+	}
+}
+
+void SetColor(uint3 id, float4 color) {
+	if (id.x < _Resolution && id.y < _Resolution) {
+		_Colors[id.x + id.y * _Resolution] = color;
+	}
+}
+
+[numthreads(8, 8, 1)]
+void MandelbrotKernel2D(uint3 id: SV_DISPATCHTHREADID) {
+
+	uint2 gridId = id.xy;
+	float2 uv = GetUV(gridId);
+	
+
+	//Calculate real and imaginary part of the complex number
+	float x0 = lerp(_MinReal, _MaxReal, (uv.x + 1.0) * 0.5);
+	float y0 = lerp(_MinImaginary, _MaxImaginary, (uv.y + 1.0) * 0.5);
+
+	SetPosition(gridId, float3(uv.x, uv.y, 0));
+
+	//Initialize z to 0 + 0i
+	float zx = 0.0;
+	float zy = 0.0;
+
+	int iteration = 0;
+	const int maxIterations = 1000;
+
+	
+	//Mandelbrot iteration
+	while (zx * zx + zy * zy < 4.0 && iteration < maxIterations) {
+		float xtemp = zx * zx - zy * zy + x0;
+		zy = 2.0 * zx * zy + y0;
+		zx = xtemp;
+		iteration++;
+	}
+	//Determine the color based on the number of iterations
+	float4 color = iteration == maxIterations ? float4(0.0, 0.0, 0.0, 1.0) : float4(1.0, 1.0, 1.0, 1.0);
+	SetColor(id, color);
+	}
+	
