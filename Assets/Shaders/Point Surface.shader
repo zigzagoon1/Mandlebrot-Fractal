@@ -34,7 +34,6 @@ Shader "Graph/Point Surface" {
 					color = _Colors[unity_InstanceID];
 				#endif
 					o.Albedo = color;
-				//o.Albedo = saturate(i.worldPos * 0.5 + 0.5);
 			}
 		ENDCG
 	}

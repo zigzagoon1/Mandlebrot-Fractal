@@ -1,14 +1,16 @@
-#pragma kernel MandelbrotKernel2D
+#pragma kernel GenerateMandelbrotKernel2D
 
 RWStructuredBuffer<float3> _Positions;
 RWStructuredBuffer<float4> _Colors;
-//RWTexture2D<float4> _ColorTexture;
+
+//these values are set by MandelbrotGraph2D.cs using the values in the inspector
 uint _Resolution;
 float _MinReal;
 float _MaxReal;
 float _MinImaginary;
 float _MaxImaginary;
 
+//retrieve uv coordinates, ensuring values are constrained to the -1 to 1 range
 float2 GetUV(uint2 id) {
 	return (id + 0.5) / _Resolution * 2.0 - 1.0;
 }
@@ -24,19 +26,19 @@ void SetColor(uint3 id, float4 color) {
 		_Colors[id.x + id.y * _Resolution] = color;
 	}
 }
-
+//numthreads specifies the number of threads to run per thread group in each dimension- the product of the dimensions cannot exceed 1024 for DirectX 11 and higher 
 [numthreads(8, 8, 1)]
-void MandelbrotKernel2D(uint3 id: SV_DISPATCHTHREADID) {
+void GenerateMandelbrotKernel2D(uint3 id: SV_DISPATCHTHREADID) {
 
 	uint2 gridId = id.xy;
 	float2 uv = GetUV(gridId);
+	SetPosition(gridId, float3(uv.x, uv.y, 0));
 	
 
-	//Calculate real and imaginary part of the complex number
+	//Calculate real and imaginary part of the complex number- the interpolation value t is within the 0 to 1 range
 	float x0 = lerp(_MinReal, _MaxReal, (uv.x + 1.0) * 0.5);
 	float y0 = lerp(_MinImaginary, _MaxImaginary, (uv.y + 1.0) * 0.5);
 
-	SetPosition(gridId, float3(uv.x, uv.y, 0));
 
 	//Initialize z to 0 + 0i
 	float zx = 0.0;
@@ -53,7 +55,7 @@ void MandelbrotKernel2D(uint3 id: SV_DISPATCHTHREADID) {
 		zx = xtemp;
 		iteration++;
 	}
-	//Determine the color based on the number of iterations
+	//Determine the color based on the number of iterations, black if the set reaches max iterations without going above 4, white otherwise
 	float4 color = iteration == maxIterations ? float4(0.0, 0.0, 0.0, 1.0) : float4(1.0, 1.0, 1.0, 1.0);
 	SetColor(id, color);
 	}

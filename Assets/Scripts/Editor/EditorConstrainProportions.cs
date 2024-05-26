@@ -65,5 +65,3 @@ public class EditorConstrainProportions : PropertyDrawer
         }
     }
 }
-
-public class ConstrainProportions : PropertyAttribute { }
