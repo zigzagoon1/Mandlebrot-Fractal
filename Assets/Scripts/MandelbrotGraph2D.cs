@@ -10,9 +10,9 @@ public class MandelbrotGraph2D : MonoBehaviour
         positionsId = Shader.PropertyToID("_Positions"),
         resolutionId = Shader.PropertyToID("_Resolution"), 
         stepId = Shader.PropertyToID("_Step"), 
-        colorsId = Shader.PropertyToID("_Colors");
+        colorsId = Shader.PropertyToID("_Colors"),
+        zoomId = Shader.PropertyToID("_Zoom");
 
-    //The custom resolution attribute ensures this value is a number divisible by 8, for efficient GPU usage
     [SerializeField, Resolution]
     int resolution = 10;
 
@@ -38,9 +38,14 @@ public class MandelbrotGraph2D : MonoBehaviour
 
     [SerializeField, Range(-5, 5)]
     float maxImaginary = 2.0f;
-    //Zoom is not yet implemented
+    
     [SerializeField, ConstrainProportions]
     Vector2 zoom = Vector2.one;
+
+    Vector2 zoomCenter = Vector2.zero;
+
+    float prevZoomX;
+    float prevZoomY;
 
     ComputeBuffer positionsBuffer;
     ComputeBuffer colorsBuffer;
@@ -65,15 +70,25 @@ public class MandelbrotGraph2D : MonoBehaviour
     private void Start()
     {
         DispatchComputeShader();
+        prevZoomX = zoom.x;
+        prevZoomY = zoom.y;
     }
     private void Update()
     {
         pointMaterial.SetBuffer(positionsId, positionsBuffer);
         pointMaterial.SetBuffer(colorsId, colorsBuffer);
         pointMaterial.SetFloat(stepId, step);
+        pointMaterial.SetVector(zoomId, zoom);
         var bounds = new Bounds(Vector3.zero, Vector3.one * (Mathf.Abs(maxReal - minReal + 2f / resolution)));
+
         Graphics.DrawMeshInstancedProcedural(instanceMesh, 0, pointMaterial, bounds, positionsBuffer.count);
 
+        if (prevZoomX != zoom.x || prevZoomY != zoom.y)
+        {
+            DispatchComputeShader();
+            prevZoomX = zoom.x;
+            prevZoomY = zoom.y;
+        }
         /*        float time = Time.time;
                 for (int i = 0; i < points.Length; i++)
                 {
@@ -88,11 +103,11 @@ public class MandelbrotGraph2D : MonoBehaviour
     {
         int kernelHandle = computeShader2D.FindKernel("GenerateMandelbrotKernel2D");
         computeShader2D.SetInt(resolutionId, resolution);
-        computeShader2D.SetFloat(stepId, step);
         computeShader2D.SetFloat("_MinReal", minReal);
         computeShader2D.SetFloat("_MaxReal", maxReal);
         computeShader2D.SetFloat("_MinImaginary", minImaginary);
         computeShader2D.SetFloat("_MaxImaginary", maxImaginary);
+        computeShader2D.SetVector(zoomId, zoom);
         computeShader2D.SetBuffer(kernelHandle, positionsId, positionsBuffer);
         computeShader2D.SetBuffer(kernelHandle, colorsId, colorsBuffer);
 

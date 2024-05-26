@@ -10,9 +10,13 @@ float _MaxReal;
 float _MinImaginary;
 float _MaxImaginary;
 
-//retrieve uv coordinates, ensuring values are constrained to the -1 to 1 range
+float2 _Zoom;
+float2 _ZoomCenter;
+
+//retrieve uv coordinates. values are constrained to the -1 to 1 range unless the zoom factor for x or y is changed
 float2 GetUV(uint2 id) {
-	return (id + 0.5) / _Resolution * 2.0 - 1.0;
+	float2 uv = (id + 0.5) / _Resolution * 2.0 - 1.0;
+	return uv;
 }
 
 void SetPosition(uint2 id, float3 position) {
@@ -30,14 +34,30 @@ void SetColor(uint3 id, float4 color) {
 [numthreads(8, 8, 1)]
 void GenerateMandelbrotKernel2D(uint3 id: SV_DISPATCHTHREADID) {
 
+	float realRange = (_MaxReal - _MinReal) / _Zoom.x;
+	float imaginaryRange = (_MaxImaginary - _MinImaginary) / _Zoom.y;
+
+	float realCenter = (_MinReal + _MaxReal) / 2.0;
+	float imaginaryCenter = (_MinImaginary + _MaxImaginary) / 2.0;
+
+	_MinReal = realCenter - realRange / 2.0;
+	_MaxReal = realCenter + realRange / 2.0;
+
+	_MinImaginary = imaginaryCenter - imaginaryRange / 2.0;
+	_MaxImaginary = imaginaryCenter + imaginaryRange / 2.0;
+
+
 	uint2 gridId = id.xy;
 	float2 uv = GetUV(gridId);
+	float2 scaledUV = uv.xy / _Zoom.xy + float2(0, 0);
+	
 	SetPosition(gridId, float3(uv.x, uv.y, 0));
+	
 	
 
 	//Calculate real and imaginary part of the complex number- the interpolation value t is within the 0 to 1 range
-	float x0 = lerp(_MinReal, _MaxReal, (uv.x + 1.0) * 0.5);
-	float y0 = lerp(_MinImaginary, _MaxImaginary, (uv.y + 1.0) * 0.5);
+	float x0 = lerp(_MinReal, _MaxReal, (scaledUV.x + 1.0) * 0.5);
+	float y0 = lerp(_MinImaginary, _MaxImaginary, (scaledUV.y + 1.0) * 0.5);
 
 
 	//Initialize z to 0 + 0i
