@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using Unity.VisualScripting.Dependencies.Sqlite;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class MandelbrotGraph2D : MonoBehaviour
 {
@@ -11,7 +12,8 @@ public class MandelbrotGraph2D : MonoBehaviour
         resolutionId = Shader.PropertyToID("_Resolution"), 
         stepId = Shader.PropertyToID("_Step"), 
         colorsId = Shader.PropertyToID("_Colors"),
-        zoomId = Shader.PropertyToID("_Zoom");
+        zoomId = Shader.PropertyToID("_Zoom"),
+        zoomCenterId = Shader.PropertyToID("_ZoomCenter");
 
     [SerializeField, Resolution]
     int resolution = 10;
@@ -42,6 +44,10 @@ public class MandelbrotGraph2D : MonoBehaviour
     [SerializeField, ConstrainProportions]
     Vector2 zoom = Vector2.one;
 
+    [SerializeField, Range(0, 1)]
+    float scrollSpeed = 0.15f;
+
+    //setting zoomCenter is not yet implemented
     Vector2 zoomCenter = Vector2.zero;
 
     float prevZoomX;
@@ -52,11 +58,16 @@ public class MandelbrotGraph2D : MonoBehaviour
     //Step is used to determine the scale each point must be to fit within the space defined by the complex number plane, and is determined by the resolution
     float step;
 
+    Bounds graphBounds;
+
+    InputActionAsset input;
     private void OnEnable()
     {
         step = 2f / resolution;
         positionsBuffer = new ComputeBuffer(resolution * resolution, 3 * 4);
         colorsBuffer = new ComputeBuffer(resolution * resolution, 4 * 4);
+        input = GetComponent<PlayerInput>().actions;
+        input.FindAction("ScrollZoom", true).performed += context => ScrollZoom(context);
     }
     private void OnDisable()
     {
@@ -65,6 +76,7 @@ public class MandelbrotGraph2D : MonoBehaviour
         colorsBuffer.Release();
         positionsBuffer = null;
         colorsBuffer = null;
+        input.Disable();
     }
 
     private void Start()
@@ -72,6 +84,7 @@ public class MandelbrotGraph2D : MonoBehaviour
         DispatchComputeShader();
         prevZoomX = zoom.x;
         prevZoomY = zoom.y;
+        zoomCenter = Vector2.zero;
     }
     private void Update()
     {
@@ -79,9 +92,10 @@ public class MandelbrotGraph2D : MonoBehaviour
         pointMaterial.SetBuffer(colorsId, colorsBuffer);
         pointMaterial.SetFloat(stepId, step);
         pointMaterial.SetVector(zoomId, zoom);
-        var bounds = new Bounds(Vector3.zero, Vector3.one * (Mathf.Abs(maxReal - minReal + 2f / resolution)));
 
-        Graphics.DrawMeshInstancedProcedural(instanceMesh, 0, pointMaterial, bounds, positionsBuffer.count);
+        graphBounds = new Bounds(Vector3.zero, Vector3.one * (Mathf.Abs(maxReal - minReal + 2f / resolution)));
+
+        Graphics.DrawMeshInstancedProcedural(instanceMesh, 0, pointMaterial, graphBounds, positionsBuffer.count);
 
         if (prevZoomX != zoom.x || prevZoomY != zoom.y)
         {
@@ -99,6 +113,14 @@ public class MandelbrotGraph2D : MonoBehaviour
                     point.localPosition = position;
                 }*/
     }
+    public void ScrollZoom(InputAction.CallbackContext context)
+    {
+        Vector2 inputVec = context.ReadValue<Vector2>();
+
+        zoom.x += inputVec.y * scrollSpeed;
+        zoom.y += inputVec.y * scrollSpeed;
+    }
+
     void DispatchComputeShader()
     {
         int kernelHandle = computeShader2D.FindKernel("GenerateMandelbrotKernel2D");

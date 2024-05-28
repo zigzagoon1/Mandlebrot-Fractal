@@ -1,0 +1,66 @@
+{
+    "name": "Controls",
+    "maps": [
+        {
+            "name": "2DGraphZoom",
+            "id": "f5eb23fd-99c8-4331-a558-f82d7e51e8cd",
+            "actions": [
+                {
+                    "name": "ScrollZoom",
+                    "type": "Value",
+                    "id": "64b52149-aff5-4598-bd15-f4b80296c183",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "SetZoomCenter",
+                    "type": "Button",
+                    "id": "236f8e93-5dba-4b39-81d8-6c82b8e9b9d9",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "e2343d1b-99b3-45ff-8666-fcb952661497",
+                    "path": "<Mouse>/leftButton",
+                    "interactions": "MultiTap",
+                    "processors": "",
+                    "groups": "Computer",
+                    "action": "SetZoomCenter",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "cbf671ab-adc7-40fe-9e1a-96605b1111e2",
+                    "path": "<Mouse>/scroll",
+                    "interactions": "",
+                    "processors": "NormalizeVector2",
+                    "groups": "",
+                    "action": "ScrollZoom",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": [
+        {
+            "name": "Computer",
+            "bindingGroup": "Computer",
+            "devices": [
+                {
+                    "devicePath": "<Mouse>",
+                    "isOptional": false,
+                    "isOR": false
+                }
+            ]
+        }
+    ]
+}

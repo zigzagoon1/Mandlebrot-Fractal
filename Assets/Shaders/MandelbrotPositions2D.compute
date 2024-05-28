@@ -46,7 +46,6 @@ void GenerateMandelbrotKernel2D(uint3 id: SV_DISPATCHTHREADID) {
 	_MinImaginary = imaginaryCenter - imaginaryRange / 2.0;
 	_MaxImaginary = imaginaryCenter + imaginaryRange / 2.0;
 
-
 	uint2 gridId = id.xy;
 	float2 uv = GetUV(gridId);
 	float2 scaledUV = uv.xy / _Zoom.xy + float2(0, 0);
