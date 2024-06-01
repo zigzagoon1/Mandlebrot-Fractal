@@ -7,12 +7,10 @@ public class EditorConstrainProportions : PropertyDrawer
     bool constrain = true;
 
     float aspectRatio = 1f;
-    GUIContent linkIcon = EditorGUIUtility.IconContent("d_linked");
-    GUIContent unlinkedIcon = EditorGUIUtility.IconContent("d_unlinked");
+    readonly GUIContent linkIcon = EditorGUIUtility.IconContent("d_linked");
+    readonly GUIContent unlinkedIcon = EditorGUIUtility.IconContent("d_unlinked");
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
     {
-
-
         if (property.propertyType == SerializedPropertyType.Vector2)
         {
             EditorGUI.BeginProperty(position, label, property);

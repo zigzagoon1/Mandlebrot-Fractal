@@ -42,7 +42,7 @@ public partial class @Controls: IInputActionCollection2, IDisposable
                     ""id"": ""236f8e93-5dba-4b39-81d8-6c82b8e9b9d9"",
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
-                    ""interactions"": """",
+                    ""interactions"": ""MultiTap"",
                     ""initialStateCheck"": false
                 }
             ],
@@ -51,7 +51,7 @@ public partial class @Controls: IInputActionCollection2, IDisposable
                     ""name"": """",
                     ""id"": ""e2343d1b-99b3-45ff-8666-fcb952661497"",
                     ""path"": ""<Mouse>/leftButton"",
-                    ""interactions"": ""MultiTap"",
+                    ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""Computer"",
                     ""action"": ""SetZoomCenter"",
