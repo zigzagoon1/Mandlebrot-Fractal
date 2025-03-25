@@ -253,6 +253,10 @@ MonoBehaviour:
   instanceMesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
   zoomSpeed: 0.15
   selectedColorModeForFractal: 0
+  currentMinReal: -2.5
+  currentMaxReal: 2
+  currentMinImaginary: -2
+  currentMaxImaginary: 2
   centerRe: 0
   centerIm: 0
   scale: 0

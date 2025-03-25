@@ -94,8 +94,6 @@ public static class FractalSpaceCalculator
         float scaledFractalX = minX + scaledScreenX * xScale;
         float scaledFractalY = minY + scaledScreenY * yScale;
 
-        Debug.Log("click in fractal space X: " + scaledFractalX);
-        Debug.Log("click in fractal space Y: " + scaledFractalY);
         Vector3 fractalPos = new(scaledFractalX, scaledFractalY, fractalWorldBounds.center.z);
 
         //I did mix and match a bit on the details of this fractal- most are in fractal screen space, but this center is mapped to the complex number plane.

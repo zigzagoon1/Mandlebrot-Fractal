@@ -13,6 +13,12 @@ int _ColoringMode; //0 = standard using above colors and the iteration count, 1 
 
 //these values are set by MandelbrotGraph2D.cs 
 uint _Resolution;
+
+float _MinImaginary;
+float _MaxImaginary;
+float _MinReal;
+float _MaxReal;
+
 float _CenterRe;
 float _CenterIm;
 float _Scale;
@@ -43,12 +49,14 @@ void GenerateMandelbrotKernel2D(uint3 id: SV_DISPATCHTHREADID) {
 	
 	SetPosition(id, float3(uv.x, uv.y, 0));
 
+	// Use these values when using min/max
 	//Calculate real and imaginary part of the complex number- the interpolation value t is within the 0 to 1 range
-	//float x0 = lerp(_MinReal, _MaxReal, (uv.x + 1.0) * 0.5);
-	//float y0 = lerp(_MinImaginary, _MaxImaginary, (uv.y + 1.0) * 0.5);
+	float x0 = lerp(_MinReal, _MaxReal, (uv.x + 1.0) * 0.5);
+	float y0 = lerp(_MinImaginary, _MaxImaginary, (uv.y + 1.0) * 0.5);
 
-	float x0 = _CenterRe + ((float) id.x - (_Resolution * 0.5)) * _Scale;
-	float y0 = _CenterIm + ((float)id.y - (_Resolution * 0.5) + 0.0001) * _Scale;
+	// Use these values when using center and scale
+	//float x0 = _CenterRe + ((float) id.x - (_Resolution * 0.5)) * _Scale;
+	//float y0 = _CenterIm + ((float)id.y - (_Resolution * 0.5) + 0.0001) * _Scale;
 
 	//Initialize z to 0 + 0i
 	float zx = 0.0;
@@ -82,15 +90,15 @@ void GenerateMandelbrotKernel2D(uint3 id: SV_DISPATCHTHREADID) {
 		color = iteration == maxIterations 
 		? BLACK
 		: float4(
-			0.5 + 0.5 * sin(6.2831 * t),
-			0.5 + 0.5 * sin (6.2831 * t + 2.094), // +120 degrees
+			0.5 + 0.5 * sin(6.2831 * t + iteration),
+			0.5 + 0.5 * sin (6.2831 * t + 2.094 - iteration), // +120 degrees
 			0.5 + 0.5 * sin (6.2831 * t + 4.188), // +240 degrees
 			1.0
 		);
 	}
 
 	if (_ColoringMode == 2) {
-		float brightness = 1.0 - exp(-minDist * 0.05);
+		float brightness = 1.0 - exp(-minDist * 0.1);
 		color = float4(brightness, brightness * 0.5, brightness * 0.2, 1.0);
 	}
 	//Determine the color based on the number of iterations, black if the set reaches max iterations without going above 4, white otherwise
