@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using PeterO.Numbers;
 
 public class MandelbrotGraph2D : MonoBehaviour
 {
@@ -28,19 +29,25 @@ public class MandelbrotGraph2D : MonoBehaviour
     //number plane, the grid that holds the image of the fractal once plotted.
     //This default starting range is sufficient for viewing the details of the classic Mandelbrot fractal.
     //The range will be adjusted when zooming in or out on the fractal.
-    readonly float defaultMinReal = -2.5f;
-    readonly float defaultMaxReal = 2f;
-    readonly float defaultMinImaginary = -2f;
-    readonly float defaultMaxImaginary = 2f;
+    readonly double defaultMinReal = -2.5;
+    readonly double defaultMaxReal = 2;
+    readonly double defaultMinImaginary = -2;
+    readonly double defaultMaxImaginary = 2;
 
+    /*    [SerializeField]
+        float currentMinReal;
+        [SerializeField]
+        float currentMaxReal;
+        [SerializeField]
+        float currentMinImaginary;
+        [SerializeField]
+        float currentMaxImaginary;*/
     [SerializeField]
-    float currentMinReal;
+    float centerRe;
     [SerializeField]
-    float currentMaxReal;
+    float centerIm;
     [SerializeField]
-    float currentMinImaginary;
-    [SerializeField]
-    float currentMaxImaginary;
+    float scale;
 
     ComputeBuffer positionsBuffer;
     ComputeBuffer colorsBuffer;
@@ -74,11 +81,15 @@ public class MandelbrotGraph2D : MonoBehaviour
 
     private void Start()
     {
-        currentMinReal = defaultMinReal;
-        currentMaxReal = defaultMaxReal;
-        currentMinImaginary = defaultMinImaginary;
-        currentMaxImaginary = defaultMaxImaginary;
+        /*        currentMinReal = defaultMinReal;
+                currentMaxReal = defaultMaxReal;
+                currentMinImaginary = defaultMinImaginary;
+                currentMaxImaginary = defaultMaxImaginary;*/
 
+        centerRe = -0.25f;
+        centerIm = 0.0f;
+        scale = 3.5f / resolution;
+        Debug.Log("Scale = " + scale);
         Vector3 graphSize = new(2f, 2f, 0.2f);
         graphBounds = new Bounds(Vector3.zero, graphSize);
     }
@@ -96,18 +107,25 @@ public class MandelbrotGraph2D : MonoBehaviour
         pointMaterial.SetFloat(stepId, step);
 
         int kernelHandle = computeShader2D.FindKernel("GenerateMandelbrotKernel2D");
+        /*        
+                computeShader2D.SetFloat("_MinReal", currentMinReal);
+                computeShader2D.SetFloat("_MaxReal", currentMaxReal);
+                computeShader2D.SetFloat("_MinImaginary", currentMinImaginary);
+                computeShader2D.SetFloat("_MaxImaginary", currentMaxImaginary);*/
+
         computeShader2D.SetInt(resolutionId, resolution);
-        computeShader2D.SetFloat("_MinReal", currentMinReal);
-        computeShader2D.SetFloat("_MaxReal", currentMaxReal);
-        computeShader2D.SetFloat("_MinImaginary", currentMinImaginary);
-        computeShader2D.SetFloat("_MaxImaginary", currentMaxImaginary);
+        computeShader2D.SetFloat("_CenterRe", centerRe);
+        computeShader2D.SetFloat("_CenterIm", centerIm);
+        computeShader2D.SetFloat("_Scale", scale);
+
         computeShader2D.SetBuffer(kernelHandle, positionsId, positionsBuffer);
         computeShader2D.SetBuffer(kernelHandle, colorsId, colorsBuffer);
 
         int threadGroups = Mathf.CeilToInt(resolution / 8.0f);
+
         computeShader2D.Dispatch(kernelHandle, threadGroups, threadGroups, 1);
 
-        Graphics.DrawMeshInstancedProcedural(instanceMesh, 0, pointMaterial, graphBounds, positionsBuffer.count);
+        Graphics.DrawMeshInstancedProcedural(instanceMesh, 0, pointMaterial, graphBounds, resolution * resolution);
     }
 
     public void HandleZoomInput(InputAction.CallbackContext context)
@@ -127,8 +145,18 @@ public class MandelbrotGraph2D : MonoBehaviour
         {
             return;
         }
-        
-        FractalSpaceCalculator.ConvertScreenPointToFractalSpace(new(mouseScreenPos.x, mouseScreenPos.y, 0), Camera.main, graphBounds, ref currentMinReal, ref currentMaxReal, ref currentMinImaginary, ref currentMaxImaginary);
+
+        // Normalize the mouse position relative to the center of the screen
+        float normX = (mouseScreenPos.x / Screen.width - 0.5f);
+        float normY = (mouseScreenPos.y / Screen.height - 0.5f);
+
+        // Scale units in fractal space for each pixel
+        float offsetX = normX * resolution * scale;
+        float offsetY = normY * resolution * scale;
+
+        centerRe+= offsetX;
+        centerIm += offsetY;
+        //FractalSpaceCalculator.ConvertScreenPointToFractalSpace(new(mouseScreenPos.x, mouseScreenPos.y, 0), Camera.main, graphBounds, ref currentMinReal, ref currentMaxReal, ref currentMinImaginary, ref currentMaxImaginary);
         //After setting a new center, we apply the zoom to the new center. Without this step, there will be issues with zoom and centering behavior.
         ApplyZoom();
     }
@@ -138,16 +166,20 @@ public class MandelbrotGraph2D : MonoBehaviour
     /// <param name="zoomFactor">The zoom to apply. Defaults to one, which does not apply any additional zoom, but is used to re-center things after changing the center point of the fractal.</param>
     void ApplyZoom(float zoomFactor = 1)
     {
-        // Calculate new ranges based on the zoom factor
-        float realRange = (currentMaxReal - currentMinReal) / zoomFactor;
-        float imagRange = (currentMaxImaginary - currentMinImaginary) / zoomFactor;
+        /*        // Calculate new ranges based on the zoom factor
+                float realRange = (currentMaxReal - currentMinReal) / zoomFactor;
+                float imagRange = (currentMaxImaginary - currentMinImaginary) / zoomFactor;
 
-        Vector2 center = new((currentMinReal + currentMaxReal) / 2f, (currentMinImaginary + currentMaxImaginary) / 2f);
+                Vector2 center = new((currentMinReal + currentMaxReal) / 2f, (currentMinImaginary + currentMaxImaginary) / 2f);
 
-        // Update min and max values to reflect the new zoom level
-        currentMinReal = center.x - realRange / 2;
-        currentMaxReal = center.x + realRange / 2;
-        currentMinImaginary = center.y - imagRange / 2;
-        currentMaxImaginary = center.y + imagRange / 2;
+                // Update min and max values to reflect the new zoom level
+                currentMinReal = center.x - realRange / 2;
+                currentMaxReal = center.x + realRange / 2;
+                currentMinImaginary = center.y - imagRange / 2;
+                currentMaxImaginary = center.y + imagRange / 2;*/
+
+        scale /= zoomFactor;
+        Debug.Log("Scale = " + scale);
+
     }
 }

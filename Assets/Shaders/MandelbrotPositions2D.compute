@@ -5,10 +5,10 @@ RWStructuredBuffer<float4> _Colors;
 
 //these values are set by MandelbrotGraph2D.cs using the values in the inspector
 uint _Resolution;
-float _MinReal;
-float _MaxReal;
-float _MinImaginary;
-float _MaxImaginary;
+float _CenterRe;
+float _CenterIm;
+float _Scale;
+
 //retrieve uv coordinates. values are constrained to the -1 to 1 range unless the zoom factor for x or y is changed
 float2 GetUV(uint2 id) {
 	float2 uv = (id + 0.5) / _Resolution * 2.0 - 1.0;
@@ -34,9 +34,11 @@ void GenerateMandelbrotKernel2D(uint3 id: SV_DISPATCHTHREADID) {
 	SetPosition(id, float3(uv.x, uv.y, 0));
 
 	//Calculate real and imaginary part of the complex number- the interpolation value t is within the 0 to 1 range
-	float x0 = lerp(_MinReal, _MaxReal, (uv.x + 1.0) * 0.5);
-	float y0 = lerp(_MinImaginary, _MaxImaginary, (uv.y + 1.0) * 0.5);
+	//float x0 = lerp(_MinReal, _MaxReal, (uv.x + 1.0) * 0.5);
+	//float y0 = lerp(_MinImaginary, _MaxImaginary, (uv.y + 1.0) * 0.5);
 
+	float x0 = _CenterRe + ((float) id.x - (_Resolution * 0.5)) * _Scale;
+	float y0 = _CenterIm + ((float)id.y - (_Resolution * 0.5)) * _Scale;
 
 	//Initialize z to 0 + 0i
 	float zx = 0.0;
