@@ -3,12 +3,24 @@
 RWStructuredBuffer<float3> _Positions;
 RWStructuredBuffer<float4> _Colors;
 
+static const float4 BLACK = float4(0.0, 0.0, 0.0, 1.0);
+static const float4 WHITE = float4(1.0, 1.0, 1.0, 1.0);
+static const float4 RED = float4(1.0, 0.0, 0.0, 1.0);
+static const float4 GREEN = float4(0.0, 1.0, 0.0, 1.0);
+static const float4 BLUE = float4(0.0, 0.0, 1.0, 1.0);
+
 //these values are set by MandelbrotGraph2D.cs using the values in the inspector
 uint _Resolution;
-float _MinReal;
-float _MaxReal;
-float _MinImaginary;
-float _MaxImaginary;
+//float _MinReal;
+//float _MaxReal;
+//float _MinImaginary;
+//float _MaxImaginary;
+
+//Switching to higher precision calculations for better zoom:
+float2 _BaseRe;
+float2 _BaseIm;
+float2 _StepRe;
+float2 _StepIm;
 //retrieve uv coordinates. values are constrained to the -1 to 1 range unless the zoom factor for x or y is changed
 float2 GetUV(uint2 id) {
 	float2 uv = (id + 0.5) / _Resolution * 2.0 - 1.0;
@@ -29,13 +41,18 @@ void SetColor(uint3 id, float4 color) {
 //numthreads specifies the number of threads to run per thread group in each dimension- the product of the dimensions cannot exceed 1024 for DirectX 11 and higher 
 [numthreads(8, 8, 1)]
 void GenerateMandelbrotKernel2D(uint3 id: SV_DISPATCHTHREADID) {
-	float2 uv = GetUV(id.xy);
+	//float2 uv = GetUV(id.xy);
 	
-	SetPosition(id, float3(uv.x, uv.y, 0));
+	float3 pos = float3((float)id.x / _Resolution * 2.0 - 1.0, float(id.y) / _Resolution * 2.0 - 1.0, 0.0);
+	SetPosition(id.xy, pos);
 
-	//Calculate real and imaginary part of the complex number- the interpolation value t is within the 0 to 1 range
-	float x0 = lerp(_MinReal, _MaxReal, (uv.x + 1.0) * 0.5);
-	float y0 = lerp(_MinImaginary, _MaxImaginary, (uv.y + 1.0) * 0.5);
+	//Calculate real and imaginary part of the complex number c- the interpolation value t is within the 0 to 1 range
+	//float x0 = lerp(_MinReal, _MaxReal, (uv.x + 1.0) * 0.5);
+	//float y0 = lerp(_MinImaginary, _MaxImaginary, (uv.y + 1.0) * 0.5);
+
+	//Switching to higher precision calculations for better zoom:
+	float x0 = _BaseRe.x + _BaseRe.y + id.x * (_StepRe.x + _StepRe.y);
+	float y0 = _BaseIm.x + _BaseIm.y + id.y * (_StepIm.x + _StepIm.y);
 
 
 	//Initialize z to 0 + 0i
@@ -54,7 +71,9 @@ void GenerateMandelbrotKernel2D(uint3 id: SV_DISPATCHTHREADID) {
 		iteration++;
 	}
 	//Determine the color based on the number of iterations, black if the set reaches max iterations without going above 4, white otherwise
-	float4 color = iteration == maxIterations ? float4(0.0, 0.0, 0.0, 1.0) : float4(1.0, 1.0, 1.0, 1.0);
+	//float4 color = iteration == maxIterations ? float4(0.0, 0.0, 0.0, 1.0) : float4(1.0, 1.0, 1.0, 1.0);
+	float4 color = iteration == maxIterations ? BLACK : iteration < maxIterations && iteration > 20 ? RED : iteration < 25 && iteration > 10 ? GREEN : BLUE;
+
 	SetColor(id, color);
 	}
 	

@@ -28,11 +28,10 @@ Shader "Graph/Point Surface" {
 			}
 
 			void surf (Input i, inout SurfaceOutputStandard o) {
-					float4 color = float4(1, 1, 1, 1);
 				#if defined(UNITY_PROCEDURAL_INSTANCING_ENABLED)
-					color = _Colors[unity_InstanceID];
-				#endif
+					float4 color = (float4)_Colors[unity_InstanceID];
 					o.Albedo = color;
+				#endif
 			}
 		ENDCG
 	}

@@ -1,0 +1,27 @@
+using System.Diagnostics;
+using System.Threading.Tasks;
+using UnityEngine;
+using Debug = UnityEngine.Debug;
+
+public class GenerateFractal : MonoBehaviour
+{
+
+    private void Start()
+    {
+        var stopwatch = new Stopwatch();
+
+        stopwatch.Start();
+
+        var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = 3 };
+
+        var result = Parallel.For(0, 100000, parallelOptions, (i) =>
+        {
+            Debug.Log($"From Task Id: {Task.CurrentId} - Iteration: {i}");
+        });
+
+        stopwatch.Stop();
+
+        Debug.Log($"IsCompleted: {result.IsCompleted} Elapsed Time: {stopwatch.Elapsed}");
+    }
+
+}
