@@ -25,6 +25,11 @@ public class MandelbrotGraph2D : MonoBehaviour
     [SerializeField, Range(0, 1)]
     float zoomSpeed = 0.15f;
 
+    [SerializeField]
+    ColorMode selectedColorModeForFractal = ColorMode.STANDARD;
+    private enum ColorMode { STANDARD, SINUSOIDAL, ORBIT_TRAP }
+
+
     //These 4 floats represent the current min and max values for the real and imaginary parts of the complex
     //number plane, the grid that holds the image of the fractal once plotted.
     //This default starting range is sufficient for viewing the details of the classic Mandelbrot fractal.
@@ -113,6 +118,7 @@ public class MandelbrotGraph2D : MonoBehaviour
                 computeShader2D.SetFloat("_MinImaginary", currentMinImaginary);
                 computeShader2D.SetFloat("_MaxImaginary", currentMaxImaginary);*/
 
+        computeShader2D.SetInt("_ColoringMode", (int)selectedColorModeForFractal);
         computeShader2D.SetInt(resolutionId, resolution);
         computeShader2D.SetFloat("_CenterRe", centerRe);
         computeShader2D.SetFloat("_CenterIm", centerIm);

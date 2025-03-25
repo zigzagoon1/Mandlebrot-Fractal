@@ -3,7 +3,15 @@
 RWStructuredBuffer<float3> _Positions;
 RWStructuredBuffer<float4> _Colors;
 
-//these values are set by MandelbrotGraph2D.cs using the values in the inspector
+static const float4 BLACK = float4(0.0, 0.0, 0.0, 1.0);
+static const float4 WHITE = float4(1.0, 1.0, 1.0, 1.0);
+static const float4 RED = float4(1.0, 0.0, 0.0, 1.0);
+static const float4 GREEN = float4(0.0, 1.0, 0.0, 1.0);
+static const float4 BLUE = float4(0.0, 0.0, 1.0, 1.0);
+
+int _ColoringMode; //0 = standard using above colors and the iteration count, 1 = sinusoidal, 2 = orbit trap
+
+//these values are set by MandelbrotGraph2D.cs 
 uint _Resolution;
 float _CenterRe;
 float _CenterIm;
@@ -30,6 +38,8 @@ void SetColor(uint3 id, float4 color) {
 [numthreads(8, 8, 1)]
 void GenerateMandelbrotKernel2D(uint3 id: SV_DISPATCHTHREADID) {
 	float2 uv = GetUV(id.xy);
+
+	float minDist = 1e20;
 	
 	SetPosition(id, float3(uv.x, uv.y, 0));
 
@@ -38,7 +48,7 @@ void GenerateMandelbrotKernel2D(uint3 id: SV_DISPATCHTHREADID) {
 	//float y0 = lerp(_MinImaginary, _MaxImaginary, (uv.y + 1.0) * 0.5);
 
 	float x0 = _CenterRe + ((float) id.x - (_Resolution * 0.5)) * _Scale;
-	float y0 = _CenterIm + ((float)id.y - (_Resolution * 0.5)) * _Scale;
+	float y0 = _CenterIm + ((float)id.y - (_Resolution * 0.5) + 0.0001) * _Scale;
 
 	//Initialize z to 0 + 0i
 	float zx = 0.0;
@@ -47,16 +57,44 @@ void GenerateMandelbrotKernel2D(uint3 id: SV_DISPATCHTHREADID) {
 	int iteration = 0;
 	const int maxIterations = 1000;
 
-	
 	//Mandelbrot iteration
 	while (zx * zx + zy * zy < 4.0 && iteration < maxIterations) {
 		float xtemp = zx * zx - zy * zy + x0;
-		zy = 2.0 * zx * zy + y0;
+		float nextZy = 2.0 * zx * zy + y0;
+		
+		float distToOrigin = xtemp * xtemp + nextZy * nextZy;
+		minDist = min(minDist, distToOrigin);
+
+		zy = nextZy;
 		zx = xtemp;
+
 		iteration++;
 	}
+
+	float t = iteration / (float)maxIterations;
+	float4 color = float4(1, 1, 1, 1); // fallback
+
+	if (_ColoringMode == 0) {
+		color = iteration == maxIterations ? BLACK : iteration < maxIterations && iteration > 20 ? RED : iteration < 25 && iteration > 10 ? GREEN : BLUE;
+	}
+
+	if (_ColoringMode == 1) { // Sinusoidal rainbow
+		color = iteration == maxIterations 
+		? BLACK
+		: float4(
+			0.5 + 0.5 * sin(6.2831 * t),
+			0.5 + 0.5 * sin (6.2831 * t + 2.094), // +120 degrees
+			0.5 + 0.5 * sin (6.2831 * t + 4.188), // +240 degrees
+			1.0
+		);
+	}
+
+	if (_ColoringMode == 2) {
+		float brightness = 1.0 - exp(-minDist * 0.05);
+		color = float4(brightness, brightness * 0.5, brightness * 0.2, 1.0);
+	}
 	//Determine the color based on the number of iterations, black if the set reaches max iterations without going above 4, white otherwise
-	float4 color = iteration == maxIterations ? float4(0.0, 0.0, 0.0, 1.0) : float4(1.0, 1.0, 1.0, 1.0);
+	//float4 color = iteration == maxIterations ? float4(0.0, 0.0, 0.0, 1.0) : float4(1.0, 1.0, 1.0, 1.0);
 	SetColor(id, color);
 	}
 	
