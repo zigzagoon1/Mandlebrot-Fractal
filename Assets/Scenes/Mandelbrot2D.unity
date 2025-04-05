@@ -252,7 +252,7 @@ MonoBehaviour:
   pointMaterial: {fileID: 2100000, guid: d2e595a44a919684db99003d69a99c1b, type: 2}
   instanceMesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
   zoomSpeed: 0.15
-  selectedColorModeForFractal: 0
+  selectedColorModeForFractal: 1
   currentMinReal: -2.5
   currentMaxReal: 2
   currentMinImaginary: -2

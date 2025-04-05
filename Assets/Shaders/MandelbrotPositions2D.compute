@@ -47,7 +47,7 @@ void GenerateMandelbrotKernel2D(uint3 id: SV_DISPATCHTHREADID) {
 
 	float minDist = 1e20;
 	
-	SetPosition(id, float3(uv.x, uv.y, 0));
+	SetPosition(id, float3(uv.xy, 0));
 
 	// Use these values when using min/max
 	//Calculate real and imaginary part of the complex number- the interpolation value t is within the 0 to 1 range
@@ -75,6 +75,16 @@ void GenerateMandelbrotKernel2D(uint3 id: SV_DISPATCHTHREADID) {
 
 		zy = nextZy;
 		zx = xtemp;
+
+		//have a number as an int, but assign to a float
+		//and second value representing how many 0's after decimal (no wasting encoding on decimal point)
+		//need to count zeros to left of actual important number part
+		//determine if trailing zeros
+		//use bitwise operations to do math
+		//do exponential math
+		//top number an integer, no precision issues since it is a whole number
+		//second number is exponent to represent fractions to keep track of scale of numbers
+		//if run out of space on top value, can't be more precise - reached limit
 
 		iteration++;
 	}

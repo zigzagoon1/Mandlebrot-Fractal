@@ -29,9 +29,6 @@ public class MandelbrotGraph2D : MonoBehaviour
     ColorMode selectedColorModeForFractal = ColorMode.STANDARD;
     private enum ColorMode { STANDARD, SINUSOIDAL, ORBIT_TRAP }
 
-
-    //These 4 floats represent the current min and max values for the real and imaginary parts of the complex
-    //number plane, the grid that holds the image of the fractal once plotted.
     //This default starting range is sufficient for viewing the details of the classic Mandelbrot fractal.
     //The range will be adjusted when zooming in or out on the fractal.
     readonly float defaultMinReal = -2.5f;
@@ -165,7 +162,8 @@ public class MandelbrotGraph2D : MonoBehaviour
         centerIm += offsetY;*/
 
         FractalSpaceCalculator.ConvertScreenPointToFractalSpace(new(mouseScreenPos.x, mouseScreenPos.y, 0), Camera.main, graphBounds, ref currentMinReal, ref currentMaxReal, ref currentMinImaginary, ref currentMaxImaginary);
-        //After setting a new center, we apply the zoom to the new center. Without this step, there will be issues with zoom and centering behavior.
+
+        // After setting a new center, we apply the zoom to the new center. Without this step, there will be issues with zoom and centering behavior.
         ApplyZoom();
     }
     /// <summary>
