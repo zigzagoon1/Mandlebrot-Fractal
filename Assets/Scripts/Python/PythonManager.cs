@@ -27,7 +27,7 @@ public class MandelbrotZoom : MonoBehaviour
 
     void Start()
     {
-        receivedReply = false;
+/*        receivedReply = false;
         replyMessage = string.Empty;
 
         // Start the Python process
@@ -57,12 +57,12 @@ public class MandelbrotZoom : MonoBehaviour
         maxRe = 1.0f;
         minIm = -1.0f;
         maxIm = 1.0f;
-        zoomLevel = 1.0f;
+        zoomLevel = 1.0f;*/
     }
 
     void Update()
     {
-        if (Input.mouseScrollDelta.y != 0 && !receivedReply)
+       /* if (Input.mouseScrollDelta.y != 0 && !receivedReply)
         {
             float zoomFactor = 1 + Input.mouseScrollDelta.y * 0.1f;
             Zoom(zoomFactor);
@@ -77,7 +77,7 @@ public class MandelbrotZoom : MonoBehaviour
             maxIm = float.Parse(data.new_max_im);
             receivedReply = false;
             Debug.Log($"New Bounds: minRe={minRe}, maxRe={maxRe}, minIm={minIm}, maxIm={maxIm}");
-        }
+        }*/
     }
 
     void Zoom(float zoomFactor)
